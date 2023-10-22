@@ -1,0 +1,99 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+    compatible = "brcm,bcm2711";
+
+    fragment@0 {
+        target = <&gpio>;
+        __overlay__ {
+            pwm_pins: pwm_pins {
+                brcm,pins = <19>;
+                brcm,function = <2>;
+            };
+        };
+    };
+
+    fragment@1 {
+        target = <&pwm>;
+        __overlay__ {
+            pinctrl-names = "default";
+            pinctrl-0 = <&pwm_pins>;
+            assigned-clock-rates = <100000000>;
+            status = "okay";
+        };
+    };
+
+    fragment@2 {
+        target-path = "/";
+        __overlay__ {
+            fan: pwm-fan {
+                compatible = "pwm-fan";
+                cooling-min-state = <0>;
+                cooling-max-state = <4>;
+                #cooling-cells = <2>;
+                cooling-levels = <100 125 150 200 255>;
+                pwms = <&pwm 1 1000000>;
+                status = "okay";
+            };
+        };
+    };
+
+    fragment@3 {
+        target = <&cpu_thermal>;
+    	__overlay__ {
+    		trips {
+    			trip0: trip0 {
+    				temperature = <35000>;
+    				hysteresis = <2000>;
+    				type = "active";
+    			};
+    			trip1: trip1 {
+    				temperature = <40000>;
+    				hysteresis = <2000>;
+    				type = "active";
+    			};
+    			trip2: trip2 {
+    				temperature = <45000>;
+    				hysteresis = <2000>;
+    				type = "active";
+    			};
+    			trip3: trip3 {
+    				temperature = <50000>;
+    				hysteresis = <5000>;
+    				type = "active";
+    			};
+    		};
+    		cooling-maps {
+    			map0 {
+    				trip = <&trip0>;
+    				cooling-device = <&fan 0 1>;
+    			};
+    			map1 {
+    				trip = <&trip1>;
+    				cooling-device = <&fan 1 2>;
+    			};
+    			map2 {
+    				trip = <&trip2>;
+    				cooling-device = <&fan 2 3>;
+    			};
+    			map3 {
+    				trip = <&trip3>;
+    				cooling-device = <&fan 3 4>;
+    			};
+    		};
+    	};
+    };
+
+    __overrides__ {
+        t0      = <&trip0>,"temperature:0";
+    	t0_hyst = <&trip0>,"hysteresis:0";
+    	t1      = <&trip1>,"temperature:0";
+    	t1_hyst = <&trip1>,"hysteresis:0";
+    	t2      = <&trip2>,"temperature:0";
+    	t2_hyst = <&trip2>,"hysteresis:0";
+    	t3      = <&trip3>,"temperature:0";
+    	t3_hyst = <&trip3>,"hysteresis:0";
+    };
+};
+
